@@ -1,0 +1,109 @@
+version: "3.9"
+
+services:
+  trading_bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trading_bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      # Override DB_URL to use postgres service if enabled
+      - DB_URL=postgresql://trading:trading@postgres:5432/trading_bot
+    volumes:
+      - ./logs:/app/logs # Persist logs
+      - ./data:/app/data # Persist local data cache
+      - ./.env:/app/.env:ro # Mount env file read-only
+    depends_on:
+      - redis
+    networks:
+      - trading_net
+    command: python main.py trade
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+
+  # ── Backtest Runner (run once, not always-on)
+  backtest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trading_bot_backtest
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+      - TRADING_MODE=paper
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - trading_net
+    # Override command to run backtest instead of live trading
+    command: python main.py backtest --symbol BTC/USDT --start 2022-01-01 --end 2023-12-31
+    profiles:
+      - backtest # Only starts when: docker compose --profile backtest up backtest
+
+  # ── Redis (cache + rate limit state)
+  redis:
+    image: redis:7-alpine
+    container_name: trading_bot_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - trading_net
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # ── PostgreSQL (trade/signal persistence)
+  postgres:
+    image: postgres:15-alpine
+    container_name: trading_bot_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: trading_bot
+      POSTGRES_USER: trading
+      POSTGRES_PASSWORD: trading
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - trading_net
+    profiles:
+      - database
+
+  # ── Grafana (optional monitoring dashboard) ───────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: trading_bot_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=trading_admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - trading_net
+    profiles:
+      - monitoring
+
+volumes:
+  redis_data:
+  postgres_data:
+  grafana_data:
+
+networks:
+  trading_net:
+    driver: bridge

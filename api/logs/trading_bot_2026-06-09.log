@@ -1,0 +1,9 @@
+2026-06-09 04:44:42.877 | INFO     | api.main:lifespan:76 — Backend initialized
+2026-06-09 05:31:22.743 | INFO     | api.main:lifespan:76 — Backend initialized
+2026-06-09 05:31:22.869 | INFO     | api.main:lifespan:78 — Backend shutdown
+2026-06-09 06:21:52.269 | INFO     | api.main:lifespan:77 — Backend initialized
+2026-06-09 06:21:52.350 | INFO     | api.main:lifespan:79 — Backend shutdown
+2026-06-09 06:26:00.360 | WARNING  | api.main:_handle_shutdown:114 — Shutdown signal received — finishing current cycle...
+2026-06-09 06:26:09.059 | INFO     | api.main:lifespan:77 — Backend initialized
+2026-06-09 06:26:09.171 | INFO     | api.main:lifespan:79 — Backend shutdown
+2026-06-09 06:28:51.268 | INFO     | api.main:lifespan:77 — Backend initialized

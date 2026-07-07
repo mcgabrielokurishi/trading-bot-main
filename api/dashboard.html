@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trading Platform Dashboard</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; }
+      body { margin: 0; background: #07111f; color: #e5eefb; }
+      .shell { max-width: 1200px; margin: 0 auto; padding: 24px; }
+      .card { background: rgba(10,23,42,0.85); border: 1px solid #20324f; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+      button { background: #2f6fed; color: white; border: none; padding: 10px 14px; border-radius: 999px; cursor: pointer; }
+      code { background: #111d31; padding: 2px 6px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="card">
+        <h1>Trading Platform Command Center</h1>
+        <p>Live operations, portfolio analytics, automation, and team workspaces in one place.</p>
+        <button onclick="loadOverview()">Load overview</button>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>Health</h3>
+          <div id="health">Loading...</div>
+        </div>
+        <div class="card">
+          <h3>Portfolio</h3>
+          <div id="portfolio">Loading...</div>
+        </div>
+        <div class="card">
+          <h3>Assistant</h3>
+          <div id="assistant">Loading...</div>
+        </div>
+      </div>
+    </div>
+    <script>
+      async function loadOverview() {
+        const health = await fetch('/health').then(r => r.json());
+        document.getElementById('health').innerText = JSON.stringify(health, null, 2);
+        const portfolio = await fetch('/analytics/portfolio').then(r => r.json());
+        document.getElementById('portfolio').innerText = JSON.stringify(portfolio, null, 2);
+        const assistant = await fetch('/assistant/query', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: 'Summarize my trading activity and suggest next steps' })}).then(r => r.json());
+        document.getElementById('assistant').innerText = JSON.stringify(assistant, null, 2);
+      }
+      loadOverview();
+    </script>
+  </body>
+</html>
